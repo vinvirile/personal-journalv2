@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
+import PinLock from '../components/PinLock';
 
 // Define the structure for a journal entry
 interface Entry {
@@ -24,6 +25,8 @@ export default function Home() {
   const [currentContent, setCurrentContent] = useState<string>('');
   // State for the current tags
   const [currentTags, setCurrentTags] = useState<string>('');
+  // State for tracking unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   // State for loading status
   const [isLoading, setIsLoading] = useState<boolean>(true);
   // State for error messages
@@ -32,6 +35,10 @@ export default function Home() {
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   // Check if the device is mobile using window width
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  // State for PIN lock
+  const [isLocked, setIsLocked] = useState<boolean>(true);
+  // State for the correct PIN
+  const [correctPin, setCorrectPin] = useState<string>('');
 
   // Check for mobile screen size on client side
   useEffect(() => {
@@ -47,6 +54,19 @@ export default function Home() {
 
     // Cleanup
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Check if the user has already entered the correct PIN
+  useEffect(() => {
+    // Get the PIN from the environment variable
+    const appPin = process.env.NEXT_PUBLIC_APP_PIN || '6432'; // Default to the PIN in .env.local
+    setCorrectPin(appPin);
+
+    // Check if the PIN is already in local storage
+    const storedPin = localStorage.getItem('journal_pin_validated');
+    if (storedPin && storedPin === appPin) {
+      setIsLocked(false);
+    }
   }, []);
 
   // Load entries from Supabase on initial render
@@ -93,6 +113,8 @@ export default function Home() {
       setCurrentContent('');
       setCurrentTags('');
     }
+    // Reset unsaved changes flag when switching entries
+    setHasUnsavedChanges(false);
   }, [selectedEntryId, entries]);
 
   // Function to add a new entry
@@ -123,6 +145,7 @@ export default function Home() {
       if (data && data.length > 0) {
         setEntries([data[0], ...entries]); // Add new entry to the beginning
         setSelectedEntryId(data[0].id); // Select the new entry
+        setHasUnsavedChanges(false); // Reset unsaved changes flag
       }
     } catch (error) {
       console.error('Error adding entry:', error);
@@ -135,6 +158,7 @@ export default function Home() {
   // Function to update an existing entry
   const updateEntry = async (id: number, updatedTitle: string, updatedContent: string, updatedTags: string = '') => {
     try {
+      setIsLoading(true);
       const { error } = await supabase
         .from('journal_entries')
         .update({
@@ -157,9 +181,21 @@ export default function Home() {
           tags: updatedTags
         } : entry
       ));
+
+      // Reset unsaved changes flag
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error updating entry:', error);
       setError('Failed to update entry');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to save changes to the current entry
+  const saveChanges = async () => {
+    if (selectedEntryId) {
+      await updateEntry(selectedEntryId, currentTitle, currentContent, currentTags);
     }
   };
 
@@ -194,30 +230,77 @@ export default function Home() {
 
   // Function to handle entry selection on mobile
   const handleEntrySelect = (id: number) => {
-    setSelectedEntryId(id);
-    if (isMobile) {
-      setMobileView('detail');
+    // Check if there are unsaved changes
+    if (hasUnsavedChanges && selectedEntryId !== id) {
+      if (confirm('You have unsaved changes. Do you want to discard them?')) {
+        setSelectedEntryId(id);
+        if (isMobile) {
+          setMobileView('detail');
+        }
+      }
+    } else {
+      setSelectedEntryId(id);
+      if (isMobile) {
+        setMobileView('detail');
+      }
     }
   };
 
   // Function to go back to entries list on mobile
   const goBackToList = () => {
-    setMobileView('list');
+    if (hasUnsavedChanges) {
+      if (confirm('You have unsaved changes. Do you want to discard them?')) {
+        setMobileView('list');
+      }
+    } else {
+      setMobileView('list');
+    }
   };
 
   // Function to handle adding a new entry on mobile
   const handleAddEntry = async () => {
-    await addEntry();
-    if (isMobile) {
-      setMobileView('detail');
+    if (hasUnsavedChanges) {
+      if (confirm('You have unsaved changes. Do you want to discard them?')) {
+        await addEntry();
+        if (isMobile) {
+          setMobileView('detail');
+        }
+      }
+    } else {
+      await addEntry();
+      if (isMobile) {
+        setMobileView('detail');
+      }
     }
   };
 
   // Get the currently selected entry object
   const selectedEntry = entries.find(entry => entry.id === selectedEntryId);
 
+  // Function to handle unlocking the application
+  const handleUnlock = () => {
+    setIsLocked(false);
+  };
+
+  // Function to lock the application
+  const handleLock = () => {
+    if (hasUnsavedChanges) {
+      if (confirm('You have unsaved changes. Do you want to discard them and lock the journal?')) {
+        localStorage.removeItem('journal_pin_validated');
+        setIsLocked(true);
+      }
+    } else {
+      localStorage.removeItem('journal_pin_validated');
+      setIsLocked(true);
+    }
+  };
+
   return (
     <div className="h-screen bg-stone-100 font-[family-name:var(--font-caveat)] flex flex-col overflow-hidden">
+      {/* PIN Lock Screen */}
+      {isLocked && (
+        <PinLock correctPin={correctPin} onUnlock={handleUnlock} />
+      )}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md m-2" role="alert">
           <span className="block sm:inline">{error}</span>
@@ -236,9 +319,28 @@ export default function Home() {
           {/* Sidebar for Entry List */}
           <div className="w-1/3 bg-stone-200 border-r border-stone-300 flex flex-col h-full">
             <div className="flex justify-between items-center p-4 border-b border-stone-300">
-              <h2 className="text-xl font-bold text-stone-800">Entries</h2>
+              <div className="flex items-center">
+                <h2 className="text-xl font-bold text-stone-800">Entries</h2>
+                <button
+                  onClick={handleLock}
+                  className="ml-2 text-stone-600 hover:text-stone-800"
+                  title="Lock Journal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </button>
+              </div>
               <button
-                onClick={addEntry}
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    if (confirm('You have unsaved changes. Do you want to discard them?')) {
+                      addEntry();
+                    }
+                  } else {
+                    addEntry();
+                  }
+                }}
                 disabled={isLoading}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -255,7 +357,15 @@ export default function Home() {
                   {entries.map(entry => (
                     <li
                       key={entry.id}
-                      onClick={() => setSelectedEntryId(entry.id)}
+                      onClick={() => {
+                        if (hasUnsavedChanges && selectedEntryId !== entry.id) {
+                          if (confirm('You have unsaved changes. Do you want to discard them?')) {
+                            setSelectedEntryId(entry.id);
+                          }
+                        } else {
+                          setSelectedEntryId(entry.id);
+                        }
+                      }}
                       className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors duration-200 ${
                         selectedEntryId === entry.id
                           ? 'bg-blue-100 border border-blue-300'
@@ -295,7 +405,7 @@ export default function Home() {
                     value={currentTitle}
                     onChange={(e) => {
                       setCurrentTitle(e.target.value);
-                      updateEntry(selectedEntry.id, e.target.value, currentContent, currentTags);
+                      setHasUnsavedChanges(true);
                     }}
                     placeholder="Title"
                     className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 mb-4 focus:outline-none focus:border-blue-500"
@@ -305,7 +415,7 @@ export default function Home() {
                     value={currentContent}
                     onChange={(e) => {
                       setCurrentContent(e.target.value);
-                      updateEntry(selectedEntry.id, currentTitle, e.target.value, currentTags);
+                      setHasUnsavedChanges(true);
                     }}
                     placeholder="Start writing..."
                     className="flex-1 text-lg text-stone-800 bg-transparent resize-none focus:outline-none mb-4"
@@ -319,7 +429,7 @@ export default function Home() {
                       value={currentTags}
                       onChange={(e) => {
                         setCurrentTags(e.target.value);
-                        updateEntry(selectedEntry.id, currentTitle, currentContent, e.target.value);
+                        setHasUnsavedChanges(true);
                       }}
                       placeholder="e.g. Work, Personal, Ideas"
                       className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
@@ -336,13 +446,32 @@ export default function Home() {
             {selectedEntry && (
               <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
                 <span className="text-sm text-stone-500">{selectedEntry.strict_date}</span>
-                <button
-                  onClick={() => deleteEntry(selectedEntry.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Deleting...' : 'Delete'}
-                </button>
+                <div className="flex space-x-2">
+                  {hasUnsavedChanges && (
+                    <button
+                      onClick={saveChanges}
+                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (hasUnsavedChanges) {
+                        if (confirm('You have unsaved changes that will be lost. Do you want to delete this entry?')) {
+                          deleteEntry(selectedEntry.id);
+                        }
+                      } else {
+                        deleteEntry(selectedEntry.id);
+                      }
+                    }}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -356,7 +485,18 @@ export default function Home() {
           {mobileView === 'list' && (
             <div className="flex flex-col h-full">
               <div className="flex justify-between items-center p-4 border-b border-stone-300 bg-stone-200">
-                <h2 className="text-xl font-bold text-stone-800">Entries</h2>
+                <div className="flex items-center">
+                  <h2 className="text-xl font-bold text-stone-800">Entries</h2>
+                  <button
+                    onClick={handleLock}
+                    className="ml-2 text-stone-600 hover:text-stone-800"
+                    title="Lock Journal"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </button>
+                </div>
                 <button
                   onClick={handleAddEntry}
                   disabled={isLoading}
@@ -425,7 +565,7 @@ export default function Home() {
                       value={currentTitle}
                       onChange={(e) => {
                         setCurrentTitle(e.target.value);
-                        updateEntry(selectedEntry.id, e.target.value, currentContent, currentTags);
+                        setHasUnsavedChanges(true);
                       }}
                       placeholder="Title"
                       className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 mb-4 focus:outline-none focus:border-blue-500"
@@ -435,7 +575,7 @@ export default function Home() {
                       value={currentContent}
                       onChange={(e) => {
                         setCurrentContent(e.target.value);
-                        updateEntry(selectedEntry.id, currentTitle, e.target.value, currentTags);
+                        setHasUnsavedChanges(true);
                       }}
                       placeholder="Start writing..."
                       className="flex-1 text-lg text-stone-800 bg-transparent resize-none focus:outline-none mb-4"
@@ -450,7 +590,7 @@ export default function Home() {
                         value={currentTags}
                         onChange={(e) => {
                           setCurrentTags(e.target.value);
-                          updateEntry(selectedEntry.id, currentTitle, currentContent, e.target.value);
+                          setHasUnsavedChanges(true);
                         }}
                         placeholder="e.g. Work, Personal, Ideas"
                         className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
@@ -474,16 +614,34 @@ export default function Home() {
               {selectedEntry && (
                 <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
                   <span className="text-sm text-stone-500">{selectedEntry.strict_date}</span>
-                  <button
-                    onClick={() => {
-                      deleteEntry(selectedEntry.id);
-                      goBackToList();
-                    }}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Deleting...' : 'Delete'}
-                  </button>
+                  <div className="flex space-x-2">
+                    {hasUnsavedChanges && (
+                      <button
+                        onClick={saveChanges}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (hasUnsavedChanges) {
+                          if (confirm('You have unsaved changes that will be lost. Do you want to delete this entry?')) {
+                            deleteEntry(selectedEntry.id);
+                            goBackToList();
+                          }
+                        } else {
+                          deleteEntry(selectedEntry.id);
+                          goBackToList();
+                        }
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
