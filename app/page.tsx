@@ -249,7 +249,7 @@ export default function Home() {
               {isLoading && entries.length === 0 ? (
                 <p className="text-stone-600 text-center mt-8">Loading entries...</p>
               ) : entries.length === 0 ? (
-                <p className="text-stone-600 text-center mt-8">No entries yet. Click '+' to add one.</p>
+                <p className="text-stone-600 text-center mt-8">No entries yet. Click &apos;+&apos; to add one.</p>
               ) : (
                 <ul>
                   {entries.map(entry => (
@@ -329,7 +329,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-stone-600">
-                  <p className="text-lg">Select an entry or click '+' to create a new one.</p>
+                  <p className="text-lg">Select an entry or click &apos;+&apos; to create a new one.</p>
                 </div>
               )}
             </div>
@@ -369,7 +369,7 @@ export default function Home() {
                 {isLoading && entries.length === 0 ? (
                   <p className="text-stone-600 text-center mt-8">Loading entries...</p>
                 ) : entries.length === 0 ? (
-                  <p className="text-stone-600 text-center mt-8">No entries yet. Click '+' to add one.</p>
+                  <p className="text-stone-600 text-center mt-8">No entries yet. Click &apos;+&apos; to add one.</p>
                 ) : (
                   <ul>
                     {entries.map(entry => (
