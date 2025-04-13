@@ -541,19 +541,61 @@ export default function Home() {
           {/* Entry Detail View */}
           {mobileView === 'detail' && (
             <div className="flex flex-col h-full">
-              <div className="flex items-center p-4 border-b border-stone-300 bg-stone-200">
-                <button
-                  onClick={goBackToList}
-                  className="mr-2 text-stone-600 hover:text-stone-800"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <h2 className="text-xl font-bold text-stone-800">Edit Entry</h2>
+              {/* Header with action buttons */}
+              <div className="sticky top-0 z-20 bg-stone-200 border-b border-stone-300">
+                {/* Top row with back button, title and date */}
+                <div className="flex items-center justify-between p-2">
+                  <div className="flex items-center">
+                    <button
+                      onClick={goBackToList}
+                      className="mr-2 text-stone-600 hover:text-stone-800 flex items-center text-xs font-medium"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Back
+                    </button>
+                    <h2 className="text-lg font-bold text-stone-800">Edit Entry</h2>
+                  </div>
+                  {selectedEntry && (
+                    <span className="text-xs text-stone-500">{selectedEntry.strict_date}</span>
+                  )}
+                </div>
+
+                {/* Bottom row with action links */}
+                {selectedEntry && (
+                  <div className="flex justify-end px-2 pb-1 space-x-4">
+                    {hasUnsavedChanges && (
+                      <button
+                        onClick={saveChanges}
+                        className="text-green-600 hover:text-green-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Saving...' : 'Save'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (hasUnsavedChanges) {
+                          if (confirm('You have unsaved changes that will be lost. Do you want to delete this entry?')) {
+                            deleteEntry(selectedEntry.id);
+                            goBackToList();
+                          }
+                        } else {
+                          deleteEntry(selectedEntry.id);
+                          goBackToList();
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? '...' : 'Delete'}
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 overflow-y-auto flex-1">
+              <div className="p-4 overflow-y-auto flex-1" style={{ paddingTop: '0.5rem', maxHeight: 'calc(100vh - 160px)' }}>
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-full text-stone-600">
                     <p className="text-lg">Loading...</p>
@@ -582,21 +624,7 @@ export default function Home() {
                       disabled={isLoading}
                       rows={10}
                     />
-                    <div className="mb-4">
-                      <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600 mb-1">Tags (comma separated)</label>
-                      <input
-                        id="mobile-tags"
-                        type="text"
-                        value={currentTags}
-                        onChange={(e) => {
-                          setCurrentTags(e.target.value);
-                          setHasUnsavedChanges(true);
-                        }}
-                        placeholder="e.g. Work, Personal, Ideas"
-                        className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
-                        disabled={isLoading}
-                      />
-                    </div>
+
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-stone-600">
@@ -611,37 +639,22 @@ export default function Home() {
                 )}
               </div>
 
+              {/* Tags field at the bottom */}
               {selectedEntry && (
-                <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
-                  <span className="text-sm text-stone-500">{selectedEntry.strict_date}</span>
-                  <div className="flex space-x-2">
-                    {hasUnsavedChanges && (
-                      <button
-                        onClick={saveChanges}
-                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (hasUnsavedChanges) {
-                          if (confirm('You have unsaved changes that will be lost. Do you want to delete this entry?')) {
-                            deleteEntry(selectedEntry.id);
-                            goBackToList();
-                          }
-                        } else {
-                          deleteEntry(selectedEntry.id);
-                          goBackToList();
-                        }
-                      }}
-                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
+                <div className="sticky bottom-0 left-0 right-0 p-3 border-t border-stone-300 bg-stone-50 z-10">
+                  <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600 mb-1">Tags (comma separated)</label>
+                  <input
+                    id="mobile-tags"
+                    type="text"
+                    value={currentTags}
+                    onChange={(e) => {
+                      setCurrentTags(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="e.g. Work, Personal, Ideas"
+                    className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
+                    disabled={isLoading}
+                  />
                 </div>
               )}
             </div>
