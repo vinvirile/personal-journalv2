@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 
 interface PinLockProps {
   correctPin: string;
@@ -12,28 +11,28 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState<boolean>(false);
-  
+
   // Function to handle number button clicks
   const handleNumberClick = (number: number) => {
     if (pin.length < 4) {
       setPin(prev => prev + number);
     }
   };
-  
+
   // Function to handle delete button click
   const handleDelete = () => {
     setPin(prev => prev.slice(0, -1));
     setError(null);
   };
-  
+
   // Function to handle clear button click
   const handleClear = () => {
     setPin('');
     setError(null);
   };
-  
+
   // Function to validate the PIN
-  const validatePin = () => {
+  const validatePin = useCallback(() => {
     if (pin === correctPin) {
       // Store the PIN in local storage
       localStorage.setItem('journal_pin_validated', pin);
@@ -45,15 +44,15 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
       setTimeout(() => setShake(false), 500);
       setTimeout(() => setPin(''), 300);
     }
-  };
-  
+  }, [pin, correctPin, onUnlock]);
+
   // Check PIN when it reaches 4 digits
   useEffect(() => {
     if (pin.length === 4) {
       validatePin();
     }
-  }, [pin]);
-  
+  }, [pin, validatePin]);
+
   // Create number buttons 0-9
   const numberButtons = [];
   for (let i = 1; i <= 9; i++) {
@@ -67,31 +66,31 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
       </button>
     );
   }
-  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-stone-100 z-50">
       <div className="bg-white p-8 rounded-xl shadow-lg w-80 flex flex-col items-center">
         <h2 className="text-2xl font-bold text-stone-800 mb-6">Enter PIN</h2>
-        
+
         {/* PIN display */}
         <div className={`mb-6 flex gap-3 ${shake ? 'animate-shake' : ''}`}>
           {[0, 1, 2, 3].map((i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className={`w-5 h-5 rounded-full border-2 ${
-                pin.length > i 
-                  ? 'bg-blue-500 border-blue-500' 
+                pin.length > i
+                  ? 'bg-blue-500 border-blue-500'
                   : 'bg-white border-stone-300'
               }`}
             />
           ))}
         </div>
-        
+
         {/* Error message */}
         {error && (
           <p className="text-red-500 mb-4 text-sm">{error}</p>
         )}
-        
+
         {/* Number pad */}
         <div className="grid grid-cols-3 gap-4 mb-4">
           {numberButtons}
