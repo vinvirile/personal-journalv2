@@ -11,7 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "next": "15.3.0",
-    "openai": "^4.93.0",
+    "openai": "^4.94.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

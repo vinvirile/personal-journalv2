@@ -13,7 +13,6 @@ export default function Home() {
   const {
     entries,
     selectedEntryId,
-    setSelectedEntryId,
     currentTitle,
     setCurrentTitle,
     currentContent,
@@ -26,14 +25,10 @@ export default function Home() {
     error,
     setError,
     mobileView,
-    setMobileView,
     isMobile,
     isLocked,
     correctPin,
-    addEntry,
-    updateEntry,
     saveChanges,
-    deleteEntry,
     confirmDeleteEntry,
     confirmDialog,
     closeConfirmDialog,
@@ -81,7 +76,6 @@ export default function Home() {
             onAdd={handleAddEntry}
             onLock={handleLock}
             isLoading={isLoading}
-            hasUnsavedChanges={hasUnsavedChanges}
           />
           <div className="w-2/3 flex flex-col h-full overflow-hidden">
             <div className="p-6 overflow-y-auto flex-1">
@@ -147,7 +141,7 @@ export default function Home() {
                 {isLoading && entries.length === 0 ? (
                   <p className="text-stone-600 text-center mt-8">Loading entries...</p>
                 ) : entries.length === 0 ? (
-                  <p className="text-stone-600 text-center mt-8">No entries yet. Click '+' to add one.</p>
+                  <p className="text-stone-600 text-center mt-8">No entries yet. Click &#39;+&#39; to add one.</p>
                 ) : (
                   <ul>
                     {entries.map((entry) => (

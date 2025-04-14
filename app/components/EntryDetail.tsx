@@ -41,7 +41,7 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
   if (!entry) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-stone-600">
-        <p className="text-lg">Select an entry or click '+' to create a new one.</p>
+<p className="text-lg">Select an entry or click &#39;+&#39; to create a new one.</p>
       </div>
     );
   }

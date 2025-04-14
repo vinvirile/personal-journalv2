@@ -8,7 +8,6 @@ interface EntryListProps {
   onAdd: () => void;
   onLock: () => void;
   isLoading: boolean;
-  hasUnsavedChanges: boolean;
 }
 
 const EntryList: React.FC<EntryListProps> = ({
@@ -18,7 +17,6 @@ const EntryList: React.FC<EntryListProps> = ({
   onAdd,
   onLock,
   isLoading,
-  hasUnsavedChanges,
 }) => (
   <div className="w-1/3 bg-stone-200 border-r border-stone-300 flex flex-col h-full">
     <div className="flex justify-between items-center p-4 border-b border-stone-300">
@@ -46,7 +44,7 @@ const EntryList: React.FC<EntryListProps> = ({
       {isLoading && entries.length === 0 ? (
         <p className="text-stone-600 text-center mt-8">Loading entries...</p>
       ) : entries.length === 0 ? (
-        <p className="text-stone-600 text-center mt-8">No entries yet. Click '+' to add one.</p>
+        <p className="text-stone-600 text-center mt-8">No entries yet. Click &#39;+&#39; to add one.</p>
       ) : (
         <ul>
           {entries.map((entry) => (
