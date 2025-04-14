@@ -12,7 +12,6 @@ import { useAIGeneration } from "./hooks/useAIGeneration";
 
 export default function Home() {
   const {
-    entries,
     selectedEntryId,
     currentTitle,
     setCurrentTitle,
