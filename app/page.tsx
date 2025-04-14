@@ -5,6 +5,7 @@ import ErrorAlert from "./components/ErrorAlert";
 import EntryList from "./components/EntryList";
 import EntryDetail from "./components/EntryDetail";
 import SparkleButton from "./components/SparkleButton";
+import ConfirmDialog from "./components/ConfirmDialog";
 import { useJournal } from "./hooks/useJournal";
 import { useAIGeneration } from "./hooks/useAIGeneration";
 
@@ -33,6 +34,9 @@ export default function Home() {
     updateEntry,
     saveChanges,
     deleteEntry,
+    confirmDeleteEntry,
+    confirmDialog,
+    closeConfirmDialog,
     handleEntrySelect,
     goBackToList,
     handleAddEntry,
@@ -55,30 +59,26 @@ export default function Home() {
       {isLocked && <PinLock correctPin={correctPin} onUnlock={handleUnlock} />}
       {error && <ErrorAlert message={error} onClose={() => setError(null)} />}
 
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText || "Confirm"}
+        onConfirm={confirmDialog.confirmAction}
+        onCancel={closeConfirmDialog}
+        isLoading={isLoading}
+        type={confirmDialog.type || "danger"}
+      />
+
       {/* Desktop Layout */}
       {!isMobile && (
         <div className="flex flex-1 overflow-hidden">
           <EntryList
             entries={entries}
             selectedEntryId={selectedEntryId}
-            onSelect={(id: number) => {
-              if (hasUnsavedChanges && selectedEntryId !== id) {
-                if (confirm("You have unsaved changes. Do you want to discard them?")) {
-                  setSelectedEntryId(id);
-                }
-              } else {
-                setSelectedEntryId(id);
-              }
-            }}
-            onAdd={() => {
-              if (hasUnsavedChanges) {
-                if (confirm("You have unsaved changes. Do you want to discard them?")) {
-                  addEntry();
-                }
-              } else {
-                addEntry();
-              }
-            }}
+            onSelect={handleEntrySelect}
+            onAdd={handleAddEntry}
             onLock={handleLock}
             isLoading={isLoading}
             hasUnsavedChanges={hasUnsavedChanges}
@@ -105,13 +105,7 @@ export default function Home() {
                 onSave={saveChanges}
                 onDelete={() => {
                   if (selectedEntry) {
-                    if (hasUnsavedChanges) {
-                      if (confirm("You have unsaved changes that will be lost. Do you want to delete this entry?")) {
-                        deleteEntry(selectedEntry.id);
-                      }
-                    } else {
-                      deleteEntry(selectedEntry.id);
-                    }
+                    confirmDeleteEntry(selectedEntry.id, hasUnsavedChanges);
                   }
                 }}
                 isLoading={isLoading}
@@ -216,15 +210,7 @@ export default function Home() {
                     )}
                     <button
                       onClick={() => {
-                        if (hasUnsavedChanges) {
-                          if (confirm("You have unsaved changes that will be lost. Do you want to delete this entry?")) {
-                            deleteEntry(selectedEntry.id);
-                            goBackToList();
-                          }
-                        } else {
-                          deleteEntry(selectedEntry.id);
-                          goBackToList();
-                        }
+                        confirmDeleteEntry(selectedEntry.id, hasUnsavedChanges, true);
                       }}
                       className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={isLoading}

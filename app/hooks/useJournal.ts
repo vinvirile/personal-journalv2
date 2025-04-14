@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import { Entry } from "../types/Entry";
 
+type ConfirmDialogState = {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmAction: () => void;
+  entryId?: number;
+  hasUnsavedChanges?: boolean;
+  confirmText?: string;
+  type?: 'danger' | 'warning' | 'info';
+};
+
 export function useJournal() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
@@ -15,6 +26,12 @@ export function useJournal() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isLocked, setIsLocked] = useState<boolean>(true);
   const [correctPin, setCorrectPin] = useState<string>("");
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmAction: () => {},
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -151,6 +168,8 @@ export function useJournal() {
       if (selectedEntryId === id) {
         setSelectedEntryId(updatedEntries.length > 0 ? updatedEntries[0].id : null);
       }
+      // Close the confirmation dialog after successful deletion
+      setConfirmDialog(prev => ({ ...prev, isOpen: false }));
     } catch (error) {
       console.error("Error deleting entry:", error);
       setError("Failed to delete entry");
@@ -159,12 +178,63 @@ export function useJournal() {
     }
   };
 
+  const confirmDeleteEntry = (id: number, hasUnsavedChanges: boolean = false, goToListAfterDelete: boolean = false) => {
+    const message = hasUnsavedChanges
+      ? "You have unsaved changes that will be lost. Are you sure you want to delete this entry?"
+      : "Are you sure you want to delete this entry?";
+
+    setConfirmDialog({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message,
+      confirmAction: () => {
+        deleteEntry(id);
+        if (goToListAfterDelete && isMobile) {
+          setMobileView("list");
+        }
+      },
+      entryId: id,
+      hasUnsavedChanges,
+      confirmText: "Delete",
+      type: "danger"
+    });
+  };
+
+  const confirmDiscardChanges = (action: () => void) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Unsaved Changes",
+      message: "You have unsaved changes. Are you sure you want to discard them?",
+      confirmAction: action,
+      confirmText: "Discard",
+      type: "warning"
+    });
+  };
+
+  const confirmLock = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Lock Journal",
+      message: "You have unsaved changes. Are you sure you want to discard them and lock the journal?",
+      confirmAction: () => {
+        localStorage.removeItem("journal_pin_validated");
+        setIsLocked(true);
+      },
+      confirmText: "Lock",
+      type: "info"
+    });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
   const handleEntrySelect = (id: number) => {
     if (hasUnsavedChanges && selectedEntryId !== id) {
-      if (confirm("You have unsaved changes. Do you want to discard them?")) {
+      confirmDiscardChanges(() => {
         setSelectedEntryId(id);
         if (isMobile) setMobileView("detail");
-      }
+      });
     } else {
       setSelectedEntryId(id);
       if (isMobile) setMobileView("detail");
@@ -173,9 +243,9 @@ export function useJournal() {
 
   const goBackToList = () => {
     if (hasUnsavedChanges) {
-      if (confirm("You have unsaved changes. Do you want to discard them?")) {
+      confirmDiscardChanges(() => {
         setMobileView("list");
-      }
+      });
     } else {
       setMobileView("list");
     }
@@ -183,10 +253,10 @@ export function useJournal() {
 
   const handleAddEntry = async () => {
     if (hasUnsavedChanges) {
-      if (confirm("You have unsaved changes. Do you want to discard them?")) {
+      confirmDiscardChanges(async () => {
         await addEntry();
         if (isMobile) setMobileView("detail");
-      }
+      });
     } else {
       await addEntry();
       if (isMobile) setMobileView("detail");
@@ -199,10 +269,7 @@ export function useJournal() {
 
   const handleLock = () => {
     if (hasUnsavedChanges) {
-      if (confirm("You have unsaved changes. Do you want to discard them and lock the journal?")) {
-        localStorage.removeItem("journal_pin_validated");
-        setIsLocked(true);
-      }
+      confirmLock();
     } else {
       localStorage.removeItem("journal_pin_validated");
       setIsLocked(true);
@@ -233,6 +300,11 @@ export function useJournal() {
     updateEntry,
     saveChanges,
     deleteEntry,
+    confirmDeleteEntry,
+    confirmDiscardChanges,
+    confirmLock,
+    confirmDialog,
+    closeConfirmDialog,
     handleEntrySelect,
     goBackToList,
     handleAddEntry,
