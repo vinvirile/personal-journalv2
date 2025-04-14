@@ -4,7 +4,9 @@ import PinLock from "../components/PinLock";
 import ErrorAlert from "./components/ErrorAlert";
 import EntryList from "./components/EntryList";
 import EntryDetail from "./components/EntryDetail";
+import SparkleButton from "./components/SparkleButton";
 import { useJournal } from "./hooks/useJournal";
+import { useAIGeneration } from "./hooks/useAIGeneration";
 
 export default function Home() {
   const {
@@ -38,6 +40,15 @@ export default function Home() {
     handleUnlock,
     handleLock,
   } = useJournal();
+
+  const {
+    generateTitleFromContent,
+    generateTagsFromContent,
+    isTitleGenerating,
+    isTagsGenerating,
+    error: aiError,
+    setError: setAiError
+  } = useAIGeneration();
 
   return (
     <div className="h-screen bg-stone-100 font-[family-name:var(--font-caveat)] flex flex-col overflow-hidden">
@@ -233,17 +244,36 @@ export default function Home() {
                   </div>
                 ) : selectedEntry ? (
                   <div className="flex flex-col h-full">
-                    <input
-                      type="text"
-                      value={currentTitle}
-                      onChange={(e) => {
-                        setCurrentTitle(e.target.value);
-                        setHasUnsavedChanges(true);
-                      }}
-                      placeholder="Title"
-                      className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 mb-4 focus:outline-none focus:border-blue-500"
-                      disabled={isLoading}
-                    />
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="text"
+                        value={currentTitle}
+                        onChange={(e) => {
+                          setCurrentTitle(e.target.value);
+                          setHasUnsavedChanges(true);
+                        }}
+                        placeholder="Title"
+                        className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 flex-1 focus:outline-none focus:border-blue-500"
+                        disabled={isLoading || isTitleGenerating}
+                      />
+                      <SparkleButton
+                        onClick={async () => {
+                          if (currentContent.trim() === '') {
+                            setAiError('Please add some content before generating a title');
+                            return;
+                          }
+                          const generatedTitle = await generateTitleFromContent(currentContent);
+                          if (generatedTitle) {
+                            setCurrentTitle(generatedTitle);
+                            setHasUnsavedChanges(true);
+                          }
+                        }}
+                        isLoading={isTitleGenerating}
+                        title="Generate title from content"
+                        size="md"
+                        className="ml-2"
+                      />
+                    </div>
                     <textarea
                       value={currentContent}
                       onChange={(e) => {
@@ -270,9 +300,27 @@ export default function Home() {
               </div>
               {selectedEntry && (
                 <div className="sticky bottom-0 left-0 right-0 p-3 border-t border-stone-300 bg-stone-50 z-10">
-                  <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600 mb-1">
-                    Tags (comma separated)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600">
+                      Tags (comma separated)
+                    </label>
+                    <SparkleButton
+                      onClick={async () => {
+                        if (currentContent.trim() === '') {
+                          setAiError('Please add some content before generating tags');
+                          return;
+                        }
+                        const generatedTags = await generateTagsFromContent(currentContent);
+                        if (generatedTags) {
+                          setCurrentTags(generatedTags);
+                          setHasUnsavedChanges(true);
+                        }
+                      }}
+                      isLoading={isTagsGenerating}
+                      title="Generate tags from content"
+                      size="sm"
+                    />
+                  </div>
                   <input
                     id="mobile-tags"
                     type="text"
@@ -283,8 +331,20 @@ export default function Home() {
                     }}
                     placeholder="e.g. Work, Personal, Ideas"
                     className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
-                    disabled={isLoading}
+                    disabled={isLoading || isTagsGenerating}
                   />
+                  {aiError && (
+                    <div className="mt-2 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+                      {aiError}
+                      <button
+                        onClick={() => setAiError(null)}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                        aria-label="Dismiss error"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

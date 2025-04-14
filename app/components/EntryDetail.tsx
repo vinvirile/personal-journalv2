@@ -1,5 +1,7 @@
 import React from "react";
 import { Entry } from "../types/Entry";
+import SparkleButton from "./SparkleButton";
+import { useAIGeneration } from "../hooks/useAIGeneration";
 
 interface EntryDetailProps {
   entry: Entry | undefined;
@@ -28,6 +30,14 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
   isLoading,
   hasUnsavedChanges,
 }) => {
+  const {
+    generateTitleFromContent,
+    generateTagsFromContent,
+    isTitleGenerating,
+    isTagsGenerating,
+    error,
+    setError
+  } = useAIGeneration();
   if (!entry) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-stone-600">
@@ -38,14 +48,32 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <input
-        type="text"
-        value={currentTitle}
-        onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Title"
-        className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 mb-4 focus:outline-none focus:border-blue-500"
-        disabled={isLoading}
-      />
+      <div className="flex items-center mb-4">
+        <input
+          type="text"
+          value={currentTitle}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Title"
+          className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 flex-1 focus:outline-none focus:border-blue-500"
+          disabled={isLoading || isTitleGenerating}
+        />
+        <SparkleButton
+          onClick={async () => {
+            if (currentContent.trim() === '') {
+              setError('Please add some content before generating a title');
+              return;
+            }
+            const generatedTitle = await generateTitleFromContent(currentContent);
+            if (generatedTitle) {
+              onTitleChange(generatedTitle);
+            }
+          }}
+          isLoading={isTitleGenerating}
+          title="Generate title from content"
+          size="md"
+          className="ml-2"
+        />
+      </div>
       <textarea
         value={currentContent}
         onChange={(e) => onContentChange(e.target.value)}
@@ -54,7 +82,24 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
         disabled={isLoading}
       />
       <div className="mb-4">
-        <label htmlFor="tags" className="block text-sm font-medium text-stone-600 mb-1">Tags (comma separated)</label>
+        <div className="flex items-center justify-between mb-1">
+          <label htmlFor="tags" className="block text-sm font-medium text-stone-600">Tags (comma separated)</label>
+          <SparkleButton
+            onClick={async () => {
+              if (currentContent.trim() === '') {
+                setError('Please add some content before generating tags');
+                return;
+              }
+              const generatedTags = await generateTagsFromContent(currentContent);
+              if (generatedTags) {
+                onTagsChange(generatedTags);
+              }
+            }}
+            isLoading={isTagsGenerating}
+            title="Generate tags from content"
+            size="sm"
+          />
+        </div>
         <input
           id="tags"
           type="text"
@@ -62,9 +107,21 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
           onChange={(e) => onTagsChange(e.target.value)}
           placeholder="e.g. Work, Personal, Ideas"
           className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
-          disabled={isLoading}
+          disabled={isLoading || isTagsGenerating}
         />
       </div>
+      {error && (
+        <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+          {error}
+          <button
+            onClick={() => setError(null)}
+            className="ml-2 text-red-500 hover:text-red-700"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
         <span className="text-sm text-stone-500">{entry.strict_date}</span>
         <div className="flex space-x-2">

@@ -6,6 +6,7 @@ A simple journal application built with Next.js and Supabase.
 
 - Create, read, update, and delete journal entries
 - Tag entries with comma-separated tags
+- AI-powered title and tag generation using OpenAI's GPT-4o-mini model
 - Entries are stored in a Supabase database
 - Clean, minimalist UI with a handwritten font style
 
@@ -31,6 +32,8 @@ The application requires the following environment variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+OPENAI_API_KEY=your-openai-api-key
+NEXT_PUBLIC_APP_PIN=your-app-pin-code
 ```
 
 ## Getting Started
@@ -48,6 +51,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 - TypeScript
 - Supabase
 - TailwindCSS
+- OpenAI API (GPT-4o-mini model)
 
 ## Learn More
 
