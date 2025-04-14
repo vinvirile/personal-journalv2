@@ -6,6 +6,7 @@ import EntryList from "./components/EntryList";
 import EntryDetail from "./components/EntryDetail";
 import SparkleButton from "./components/SparkleButton";
 import ConfirmDialog from "./components/ConfirmDialog";
+import DateRangePickerComponent from "./components/DateRangePicker"; // Import DateRangePickerComponent
 import { useJournal } from "./hooks/useJournal";
 import { useAIGeneration } from "./hooks/useAIGeneration";
 
@@ -38,6 +39,13 @@ export default function Home() {
     selectedEntry,
     handleUnlock,
     handleLock,
+    // Date filter props
+    startDate,
+    endDate,
+    showDatePicker,
+    setShowDatePicker,
+    handleDateChange,
+    filteredEntries,
   } = useJournal();
 
   const {
@@ -70,12 +78,19 @@ export default function Home() {
       {!isMobile && (
         <div className="flex flex-1 overflow-hidden">
           <EntryList
-            entries={entries}
+            // entries={entries} // Removed
+            filteredEntries={filteredEntries} // Added
             selectedEntryId={selectedEntryId}
             onSelect={handleEntrySelect}
             onAdd={handleAddEntry}
             onLock={handleLock}
             isLoading={isLoading}
+            // Pass date filter props
+            showDatePicker={showDatePicker}
+            setShowDatePicker={setShowDatePicker}
+            handleDateChange={handleDateChange}
+            startDate={startDate}
+            endDate={endDate}
           />
           <div className="w-2/3 flex flex-col h-full overflow-hidden">
             <div className="p-6 overflow-y-auto flex-1">
@@ -119,9 +134,19 @@ export default function Home() {
               <div className="flex justify-between items-center p-4 border-b border-stone-300 bg-stone-200">
                 <div className="flex items-center">
                   <h2 className="text-xl font-bold text-stone-800">Entries</h2>
+                  {/* Add Calendar Icon Button for Mobile */}
+                  <button
+                    onClick={() => setShowDatePicker(!showDatePicker)}
+                    className="ml-2 text-stone-600 hover:text-stone-800"
+                    title="Filter by Date"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
                   <button
                     onClick={handleLock}
-                    className="ml-2 text-stone-600 hover:text-stone-800"
+                    className="ml-2 text-stone-600 hover:text-stone-800" // Keep ml-2
                     title="Lock Journal"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,14 +162,24 @@ export default function Home() {
                   {isLoading ? "..." : "+"}
                 </button>
               </div>
+              {/* Conditionally render Date Picker for Mobile */}
+              {showDatePicker && (
+                <div className="p-4 bg-stone-200 border-b border-stone-300">
+                  <DateRangePickerComponent onDateChange={handleDateChange} />
+                </div>
+              )}
               <div className="overflow-y-auto flex-1 p-4 bg-stone-200">
-                {isLoading && entries.length === 0 ? (
+                 {/* Update loading/empty states for filtering */}
+                {isLoading && filteredEntries.length === 0 && !startDate && !endDate ? (
                   <p className="text-stone-600 text-center mt-8">Loading entries...</p>
-                ) : entries.length === 0 ? (
-                  <p className="text-stone-600 text-center mt-8">No entries yet. Click &#39;+&#39; to add one.</p>
+                ) : filteredEntries.length === 0 ? (
+                  <p className="text-stone-600 text-center mt-8">
+                    {startDate && endDate ? "No entries found in this date range." : "No entries yet. Click '+' to add one."}
+                  </p>
                 ) : (
                   <ul>
-                    {entries.map((entry) => (
+                    {/* Use filteredEntries for Mobile */}
+                    {filteredEntries.map((entry) => (
                       <li
                         key={entry.id}
                         onClick={() => handleEntrySelect(entry.id)}
@@ -216,7 +251,7 @@ export default function Home() {
               </div>
               <div
                 className="p-4 overflow-y-auto flex-1"
-                style={{ paddingTop: "0.5rem", maxHeight: "calc(100vh - 160px)" }}
+                style={{ paddingTop: "0.5rem", paddingBottom: "1rem" }}
               >
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-full text-stone-600">
@@ -279,7 +314,7 @@ export default function Home() {
                 )}
               </div>
               {selectedEntry && (
-                <div className="sticky bottom-0 left-0 right-0 p-3 border-t border-stone-300 bg-stone-50 z-10">
+                <div className="mt-6 mb-20 p-3 border border-stone-300 rounded-lg bg-stone-50">
                   <div className="flex items-center justify-between mb-1">
                     <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600">
                       Tags (comma separated)

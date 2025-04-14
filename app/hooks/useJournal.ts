@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // Changed to useMemo
 import { supabase } from "../../utils/supabase";
 import { Entry } from "../types/Entry";
 
@@ -32,6 +32,38 @@ export function useJournal() {
     message: "",
     confirmAction: () => {},
   });
+
+  // Date Range State
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
+  // Handler for date changes
+  const handleDateChange = (start: Date | null, end: Date | null) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  // Memoized filtered entries
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+      if (!startDate || !endDate) {
+        return true; // No date range selected, show all entries
+      }
+      // Parse strict_date (YYYY-MM-DD) into local time midnight
+      const [year, month, day] = entry.strict_date.split('-').map(Number);
+      const entryDate = new Date(year, month - 1, day); // Month is 0-indexed
+      // Get start date (set to midnight)
+      const startRangeDate = new Date(startDate);
+      startRangeDate.setHours(0, 0, 0, 0);
+      // Get end date (set to midnight)
+      const endRangeDate = new Date(endDate);
+      endRangeDate.setHours(0, 0, 0, 0);
+      // Check if entryDate is within the range (inclusive)
+      return entryDate >= startRangeDate && entryDate <= endRangeDate;
+    });
+  }, [entries, startDate, endDate]);
+
 
   useEffect(() => {
     const checkMobile = () => {
@@ -311,5 +343,12 @@ export function useJournal() {
     selectedEntry,
     handleUnlock,
     handleLock,
+    // Date Filter related
+    startDate,
+    endDate,
+    showDatePicker,
+    setShowDatePicker,
+    handleDateChange,
+    filteredEntries, // Return filtered entries
   };
 }
