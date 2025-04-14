@@ -237,7 +237,10 @@ export function useJournal() {
       isOpen: true,
       title: "Unsaved Changes",
       message: "You have unsaved changes. Are you sure you want to discard them?",
-      confirmAction: action,
+      confirmAction: () => {
+        action();
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
       confirmText: "Discard",
       type: "warning"
     });
