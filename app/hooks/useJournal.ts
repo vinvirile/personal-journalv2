@@ -77,8 +77,17 @@ export function useJournal() {
   useEffect(() => {
     const appPin = process.env.NEXT_PUBLIC_APP_PIN || "6432";
     setCorrectPin(appPin);
+
+    // Check localStorage first (for remembered sessions)
     const storedPin = localStorage.getItem("journal_pin_validated");
     if (storedPin && storedPin === appPin) {
+      setIsLocked(false);
+      return;
+    }
+
+    // If not in localStorage, check sessionStorage (for current session only)
+    const sessionUnlocked = sessionStorage.getItem("journal_session_unlocked");
+    if (sessionUnlocked === "true") {
       setIsLocked(false);
     }
   }, []);
@@ -252,7 +261,9 @@ export function useJournal() {
       title: "Lock Journal",
       message: "You have unsaved changes. Are you sure you want to discard them and lock the journal?",
       confirmAction: () => {
+        // Clear both localStorage and sessionStorage
         localStorage.removeItem("journal_pin_validated");
+        sessionStorage.removeItem("journal_session_unlocked");
         setIsLocked(true);
       },
       confirmText: "Lock",
@@ -300,13 +311,24 @@ export function useJournal() {
 
   const selectedEntry = entries.find((entry) => entry.id === selectedEntryId);
 
-  const handleUnlock = () => setIsLocked(false);
+  const handleUnlock = (rememberMe: boolean = false) => {
+    // If rememberMe is false, we don't want to store the PIN in localStorage
+    // The PinLock component already handles storing the PIN if rememberMe is true
+    if (!rememberMe) {
+      // We still need to set isLocked to false, but we'll use a session storage or memory-only approach
+      // We can use sessionStorage which is cleared when the browser is closed
+      sessionStorage.setItem('journal_session_unlocked', 'true');
+    }
+    setIsLocked(false);
+  };
 
   const handleLock = () => {
     if (hasUnsavedChanges) {
       confirmLock();
     } else {
+      // Clear both localStorage and sessionStorage
       localStorage.removeItem("journal_pin_validated");
+      sessionStorage.removeItem("journal_session_unlocked");
       setIsLocked(true);
     }
   };

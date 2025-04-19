@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface PinLockProps {
   correctPin: string;
-  onUnlock: () => void;
+  onUnlock: (rememberMe: boolean) => void;
 }
 
 export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState<boolean>(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   // Function to handle number button clicks
   const handleNumberClick = (number: number) => {
@@ -34,17 +35,19 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
   // Function to validate the PIN
   const validatePin = useCallback(() => {
     if (pin === correctPin) {
-      // Store the PIN in local storage
-      localStorage.setItem('journal_pin_validated', pin);
+      // Only store the PIN in local storage if rememberMe is checked
+      if (rememberMe) {
+        localStorage.setItem('journal_pin_validated', pin);
+      }
       setError(null);
-      onUnlock();
+      onUnlock(rememberMe);
     } else {
       setError('Incorrect PIN');
       setShake(true);
       setTimeout(() => setShake(false), 500);
       setTimeout(() => setPin(''), 300);
     }
-  }, [pin, correctPin, onUnlock]);
+  }, [pin, correctPin, onUnlock, rememberMe]);
 
   // Check PIN when it reaches 4 digits
   useEffect(() => {
@@ -112,6 +115,20 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
           >
             ←
           </button>
+        </div>
+
+        {/* Remember Me checkbox */}
+        <div className="flex items-center mt-2 mb-2">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 text-blue-500 rounded border-stone-300 focus:ring-blue-500"
+          />
+          <label htmlFor="rememberMe" className="ml-2 text-sm text-stone-600">
+            Remember me on this device
+          </label>
         </div>
       </div>
     </div>
