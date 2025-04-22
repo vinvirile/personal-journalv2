@@ -9,6 +9,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import DateRangePickerComponent from "./components/DateRangePicker"; // Import DateRangePickerComponent
 import { useJournal } from "./hooks/useJournal";
 import { useAIGeneration } from "./hooks/useAIGeneration";
+import { formatTimeCST, formatUpdatedAtCST } from "../utils/dateUtils";
 
 export default function Home() {
   const {
@@ -186,7 +187,18 @@ export default function Home() {
                       >
                         <h3 className="text-lg font-semibold text-stone-800 truncate">{entry.title || "Untitled"}</h3>
                         <p className="text-sm text-stone-600 truncate">{entry.content || "No content"}</p>
-                        <p className="text-xs text-stone-500 mt-1">{entry.strict_date}</p>
+                        <div className="flex flex-col text-xs text-stone-500 mt-1">
+                          <span>
+                            {entry.strict_date} {entry.created_at && (
+                              <span className="ml-1">{formatTimeCST(entry.created_at)}</span>
+                            )}
+                          </span>
+                          {entry.updated_at && entry.updated_at !== entry.created_at && (
+                            <span className="text-xs text-stone-400">
+                              {formatUpdatedAtCST(entry.updated_at, "Edited")}
+                            </span>
+                          )}
+                        </div>
                         {entry.tags && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {entry.tags.split(",").map((tag: string, index: number) => (
@@ -222,7 +234,18 @@ export default function Home() {
                     <h2 className="text-lg font-bold text-stone-800">Edit Entry</h2>
                   </div>
                   {selectedEntry && (
-                    <span className="text-xs text-stone-500">{selectedEntry.strict_date}</span>
+                    <div className="flex flex-col text-xs text-stone-500">
+                      <span>
+                        {selectedEntry.strict_date} {selectedEntry.created_at && (
+                          <span className="ml-1">{formatTimeCST(selectedEntry.created_at)}</span>
+                        )}
+                      </span>
+                      {selectedEntry.updated_at && selectedEntry.updated_at !== selectedEntry.created_at && (
+                        <span className="text-xs text-stone-400">
+                          {formatUpdatedAtCST(selectedEntry.updated_at)}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
                 {selectedEntry && (

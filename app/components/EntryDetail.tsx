@@ -2,6 +2,7 @@ import React from "react";
 import { Entry } from "../types/Entry";
 import SparkleButton from "./SparkleButton";
 import { useAIGeneration } from "../hooks/useAIGeneration";
+import { formatTimeCST, formatUpdatedAtCST } from "../../utils/dateUtils";
 
 interface EntryDetailProps {
   entry: Entry | undefined;
@@ -123,7 +124,18 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
         </div>
       )}
       <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
-        <span className="text-sm text-stone-500">{entry.strict_date}</span>
+        <div className="flex flex-col text-sm text-stone-500">
+          <span>
+            {entry.strict_date} {entry.created_at && (
+              <span className="ml-1">{formatTimeCST(entry.created_at)}</span>
+            )}
+          </span>
+          {entry.updated_at && entry.updated_at !== entry.created_at && (
+            <span className="text-xs text-stone-400 mt-1">
+              {formatUpdatedAtCST(entry.updated_at)}
+            </span>
+          )}
+        </div>
         <div className="flex space-x-2">
           {hasUnsavedChanges && (
             <button

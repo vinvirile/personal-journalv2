@@ -168,22 +168,37 @@ export function useJournal() {
   ) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase
+      // The updated_at field will be automatically updated by the database
+      const { data, error } = await supabase
         .from("journal_entries")
         .update({
           title: updatedTitle,
           content: updatedContent,
           tags: updatedTags,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .select(); // Select the updated entry to get the new updated_at value
+
       if (error) throw error;
-      setEntries(
-        entries.map((entry) =>
-          entry.id === id
-            ? { ...entry, title: updatedTitle, content: updatedContent, tags: updatedTags }
-            : entry
-        )
-      );
+
+      if (data && data.length > 0) {
+        // Use the returned data which includes the updated_at timestamp
+        setEntries(
+          entries.map((entry) =>
+            entry.id === id ? data[0] : entry
+          )
+        );
+      } else {
+        // Fallback if no data is returned
+        setEntries(
+          entries.map((entry) =>
+            entry.id === id
+              ? { ...entry, title: updatedTitle, content: updatedContent, tags: updatedTags }
+              : entry
+          )
+        );
+      }
+
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error updating entry:", error);

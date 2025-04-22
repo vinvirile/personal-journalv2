@@ -1,6 +1,7 @@
 import React from "react"; // Removed useState
 import { Entry } from "../types/Entry";
 import DateRangePickerComponent from "./DateRangePicker";
+import { formatTimeCST, formatUpdatedAtCST } from "../../utils/dateUtils";
 
 interface EntryListProps {
   // entries: Entry[]; // Removed original entries prop
@@ -97,7 +98,18 @@ const EntryList: React.FC<EntryListProps> = ({
             >
               <h3 className="text-lg font-semibold text-stone-800 truncate">{entry.title || "Untitled"}</h3>
               <p className="text-sm text-stone-600 truncate">{entry.content || "No content"}</p>
-              <p className="text-xs text-stone-500 mt-1">{entry.strict_date}</p>
+              <div className="flex flex-col text-xs text-stone-500 mt-1">
+                <span>
+                  {entry.strict_date} {entry.created_at && (
+                    <span className="ml-1">{formatTimeCST(entry.created_at)}</span>
+                  )}
+                </span>
+                {entry.updated_at && entry.updated_at !== entry.created_at && (
+                  <span className="text-xs text-stone-400">
+                    {formatUpdatedAtCST(entry.updated_at, "Edited")}
+                  </span>
+                )}
+              </div>
               {entry.tags && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   {entry.tags.split(",").map((tag, index) => (
