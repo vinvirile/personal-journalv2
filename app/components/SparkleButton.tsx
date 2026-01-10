@@ -28,7 +28,7 @@ const SparkleButton: React.FC<SparkleButtonProps> = ({
       disabled={isLoading}
       title={title}
       aria-label={title}
-      className={`text-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-full transition-colors duration-200 ${className}`}
+      className={`text-primary/60 hover:text-primary hover:scale-110 active:scale-90 focus:outline-none transition-all-custom disabled:opacity-30 disabled:cursor-not-allowed ${className}`}
     >
       {isLoading ? (
         <svg
@@ -52,20 +52,23 @@ const SparkleButton: React.FC<SparkleButtonProps> = ({
           ></path>
         </svg>
       ) : (
-        <svg
-          className={`${sizeClasses[size]}`}
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-          />
-        </svg>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-primary/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          <svg
+            className={`${sizeClasses[size]} relative`}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+            />
+          </svg>
+        </div>
       )}
     </button>
   );

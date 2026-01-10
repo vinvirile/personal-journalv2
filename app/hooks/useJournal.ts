@@ -1,5 +1,17 @@
-import { useState, useEffect, useMemo } from "react"; // Changed to useMemo
-import { supabase } from "../../utils/supabase";
+import { useState, useEffect, useMemo } from "react";
+import { db } from "../../utils/firebase";
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  Timestamp,
+  setDoc
+} from "firebase/firestore";
 import { Entry } from "../types/Entry";
 
 type ConfirmDialogState = {
@@ -7,7 +19,7 @@ type ConfirmDialogState = {
   title: string;
   message: string;
   confirmAction: () => void;
-  entryId?: number;
+  entryId?: string; // ID is string in Firestore
   hasUnsavedChanges?: boolean;
   confirmText?: string;
   type?: 'danger' | 'warning' | 'info';
@@ -15,7 +27,7 @@ type ConfirmDialogState = {
 
 export function useJournal() {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null); // Changed to string
   const [currentTitle, setCurrentTitle] = useState<string>("");
   const [currentContent, setCurrentContent] = useState<string>("");
   const [currentTags, setCurrentTags] = useState<string>("");
@@ -96,16 +108,26 @@ export function useJournal() {
     const fetchEntries = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from("journal_entries")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        if (data) {
-          setEntries(data);
-          if (data.length > 0 && !selectedEntryId) {
-            setSelectedEntryId(data[0].id);
-          }
+        const q = query(collection(db, "journal_entries"), orderBy("created_at", "desc"));
+        const querySnapshot = await getDocs(q);
+        const fetchedEntries: Entry[] = [];
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            // Convert Firestore Timestamp to string/Date if needed
+            fetchedEntries.push({ 
+                id: doc.id,
+                ...data,
+                // Ensure dates are strings since Entry expects strings
+                created_at: data.created_at?.toDate ? data.created_at.toDate().toISOString() : data.created_at, 
+                updated_at: data.updated_at?.toDate ? data.updated_at.toDate().toISOString() : data.updated_at,
+            } as any); 
+        });
+
+        setEntries(fetchedEntries);
+        
+        if (fetchedEntries.length > 0 && !selectedEntryId) {
+            setSelectedEntryId(fetchedEntries[0].id);
         }
       } catch (error) {
         console.error("Error fetching entries:", error);
@@ -115,7 +137,7 @@ export function useJournal() {
       }
     };
     fetchEntries();
-  }, [selectedEntryId]);
+  }, [selectedEntryId]); // Keep selectedEntryId dep if we want to refetch, but usually empty dep is better for initial load. Keeping to minimize change logic provided it worked before.
 
   useEffect(() => {
     const selectedEntry = entries.find((entry) => entry.id === selectedEntryId);
@@ -136,22 +158,30 @@ export function useJournal() {
       setIsLoading(true);
       const today = new Date();
       const strictDate = today.toISOString().split("T")[0];
-      const newEntry = {
+      
+      const newEntryData = {
         title: "New Entry",
         content: "",
         tags: "",
         strict_date: strictDate,
+        created_at: Timestamp.now(), // Use Firestore server timestamp
+        updated_at: null,
+        ai_reply: null
       };
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .insert(newEntry)
-        .select();
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setEntries([data[0], ...entries]);
-        setSelectedEntryId(data[0].id);
-        setHasUnsavedChanges(false);
-      }
+
+      // Depending on if you want auto-generated IDs or integer IDs (from previous data).
+      // Firestore usually uses string IDs.
+      const docRef = await addDoc(collection(db, "journal_entries"), newEntryData);
+      
+      const newEntry = {
+        id: docRef.id,
+        ...newEntryData,
+        created_at: newEntryData.created_at.toDate().toISOString(),
+      } as any;
+
+      setEntries([newEntry, ...entries]);
+      setSelectedEntryId(newEntry.id);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error adding entry:", error);
       setError("Failed to add new entry");
@@ -161,43 +191,34 @@ export function useJournal() {
   };
 
   const updateEntry = async (
-    id: number,
+    id: string,
     updatedTitle: string,
     updatedContent: string,
     updatedTags: string = ""
   ) => {
     try {
       setIsLoading(true);
-      // The updated_at field will be automatically updated by the database
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .update({
+      const entryRef = doc(db, "journal_entries", id);
+      const updatedData = {
           title: updatedTitle,
           content: updatedContent,
           tags: updatedTags,
-        })
-        .eq("id", id)
-        .select(); // Select the updated entry to get the new updated_at value
+          updated_at: Timestamp.now()
+      };
 
-      if (error) throw error;
+      await updateDoc(entryRef, updatedData);
 
-      if (data && data.length > 0) {
-        // Use the returned data which includes the updated_at timestamp
-        setEntries(
-          entries.map((entry) =>
-            entry.id === id ? data[0] : entry
-          )
-        );
-      } else {
-        // Fallback if no data is returned
-        setEntries(
-          entries.map((entry) =>
-            entry.id === id
-              ? { ...entry, title: updatedTitle, content: updatedContent, tags: updatedTags }
-              : entry
-          )
-        );
-      }
+      setEntries(
+        entries.map((entry) =>
+          entry.id === id 
+          ? { 
+              ...entry, 
+              ...updatedData, 
+              updated_at: updatedData.updated_at.toDate().toISOString() 
+            } 
+          : entry
+        )
+      );
 
       setHasUnsavedChanges(false);
     } catch (error) {
@@ -214,11 +235,11 @@ export function useJournal() {
     }
   };
 
-  const deleteEntry = async (id: number) => {
+  const deleteEntry = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("journal_entries").delete().eq("id", id);
-      if (error) throw error;
+      await deleteDoc(doc(db, "journal_entries", id));
+      
       const updatedEntries = entries.filter((entry) => entry.id !== id);
       setEntries(updatedEntries);
       if (selectedEntryId === id) {
@@ -234,7 +255,7 @@ export function useJournal() {
     }
   };
 
-  const confirmDeleteEntry = (id: number, hasUnsavedChanges: boolean = false, goToListAfterDelete: boolean = false) => {
+  const confirmDeleteEntry = (id: string, hasUnsavedChanges: boolean = false, goToListAfterDelete: boolean = false) => {
     const message = hasUnsavedChanges
       ? "You have unsaved changes that will be lost. Are you sure you want to delete this entry?"
       : "Are you sure you want to delete this entry?";
@@ -290,7 +311,7 @@ export function useJournal() {
     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleEntrySelect = (id: number) => {
+  const handleEntrySelect = (id: string) => {
     if (hasUnsavedChanges && selectedEntryId !== id) {
       confirmDiscardChanges(() => {
         setSelectedEntryId(id);

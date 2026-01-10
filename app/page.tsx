@@ -58,7 +58,7 @@ export default function Home() {
   } = useAIGeneration();
 
   return (
-    <div className="h-screen bg-stone-100 font-[family-name:var(--font-caveat)] flex flex-col overflow-hidden">
+    <div className="h-screen bg-background font-[family-name:var(--font-outfit)] flex flex-col overflow-hidden">
       {isLocked && <PinLock correctPin={correctPin} onUnlock={handleUnlock} />}
       {error && <ErrorAlert message={error} onClose={() => setError(null)} />}
 
@@ -92,8 +92,8 @@ export default function Home() {
             startDate={startDate}
             endDate={endDate}
           />
-          <div className="w-2/3 flex flex-col h-full overflow-hidden">
-            <div className="p-6 overflow-y-auto flex-1">
+          <div className="w-2/3 flex flex-col h-full overflow-hidden bg-background">
+            <div className="overflow-y-auto flex-1">
               <EntryDetail
                 entry={selectedEntry}
                 currentTitle={currentTitle}
@@ -127,90 +127,91 @@ export default function Home() {
 
       {/* Mobile Layout (unchanged for now) */}
       {isMobile && (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden bg-background">
           {/* Entries List View */}
           {mobileView === "list" && (
             <div className="flex flex-col h-full">
-              <div className="flex justify-between items-center p-4 border-b border-stone-300 bg-stone-200">
-                <div className="flex items-center">
-                  <h2 className="text-xl font-bold text-stone-800">Entries</h2>
-                  {/* Add Calendar Icon Button for Mobile */}
-                  <button
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="ml-2 text-stone-600 hover:text-stone-800"
-                    title="Filter by Date"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleLock}
-                    className="ml-2 text-stone-600 hover:text-stone-800" // Keep ml-2
-                    title="Lock Journal"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </button>
+              <div className="flex justify-between items-center px-6 py-4 border-b border-foreground/5 bg-sidebar-bg">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-foreground font-outfit">Journal</h2>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setShowDatePicker(!showDatePicker)}
+                      className={`p-1.5 rounded-lg transition-all-custom ${showDatePicker ? 'bg-primary/10 text-primary' : 'text-foreground/40'}`}
+                      title="Filter by Date"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleLock}
+                      className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground/60 transition-all-custom"
+                      title="Lock Journal"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <button
                   onClick={handleAddEntry}
                   disabled={isLoading}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-primary hover:bg-primary-hover text-white w-8 h-8 rounded-full shadow-lg shadow-primary/20 flex items-center justify-center transition-all-custom active:scale-95 disabled:opacity-50"
                 >
-                  {isLoading ? "..." : "+"}
+                  {isLoading ? (
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  )}
                 </button>
               </div>
-              {/* Conditionally render Date Picker for Mobile */}
+
               {showDatePicker && (
-                <div className="p-4 bg-stone-200 border-b border-stone-300">
+                <div className="p-4 bg-sidebar-bg border-b border-foreground/5 animate-fade-in">
                   <DateRangePickerComponent onDateChange={handleDateChange} />
                 </div>
               )}
-              <div className="overflow-y-auto flex-1 p-4 bg-stone-200">
-                 {/* Update loading/empty states for filtering */}
+
+              <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-background">
                 {isLoading && filteredEntries.length === 0 && !startDate && !endDate ? (
-                  <p className="text-stone-600 text-center mt-8">Loading entries...</p>
+                  <div className="flex flex-col items-center justify-center mt-20 opacity-40">
+                    <svg className="animate-spin h-8 w-8 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-foreground text-sm font-outfit">Reflecting...</p>
+                  </div>
                 ) : filteredEntries.length === 0 ? (
-                  <p className="text-stone-600 text-center mt-8">
-                    {startDate && endDate ? "No entries found in this date range." : "No entries yet. Click '+' to add one."}
-                  </p>
+                  <div className="text-center mt-20 px-8">
+                    <p className="text-foreground/40 text-sm font-outfit">
+                      {startDate && endDate ? "No matches." : "Your journal is empty."}
+                    </p>
+                  </div>
                 ) : (
-                  <ul>
-                    {/* Use filteredEntries for Mobile */}
+                  <div className="space-y-3">
                     {filteredEntries.map((entry) => (
-                      <li
+                      <div
                         key={entry.id}
                         onClick={() => handleEntrySelect(entry.id)}
-                        className="p-3 mb-2 rounded-lg cursor-pointer transition-colors duration-200 bg-white hover:bg-stone-50 border border-stone-300"
+                        className="p-4 rounded-2xl bg-sidebar-bg border border-foreground/5 shadow-sm active:scale-[0.98] transition-all-custom"
                       >
-                        <h3 className="text-lg font-semibold text-stone-800 truncate">{entry.title || "Untitled"}</h3>
-                        <p className="text-sm text-stone-600 truncate">{entry.content || "No content"}</p>
-                        <div className="flex flex-col text-xs text-stone-500 mt-1">
-                          <span>
-                            {entry.strict_date} {entry.created_at && (
-                              <span className="ml-1">{formatTimeCST(entry.created_at)}</span>
-                            )}
+                        <h3 className="text-base font-bold text-foreground font-outfit truncate">{entry.title || "Untitled"}</h3>
+                        <p className="text-sm text-foreground/50 line-clamp-1 font-light mt-1">{entry.content || "No content"}</p>
+                        <div className="flex items-center gap-2 mt-3 opacity-60">
+                          <span className="text-[10px] uppercase font-bold text-foreground/40 font-outfit">
+                            {entry.strict_date}
                           </span>
-                          {entry.updated_at && entry.updated_at !== entry.created_at && (
-                            <span className="text-xs text-stone-400">
-                              {formatUpdatedAtCST(entry.updated_at, "Edited")}
-                            </span>
-                          )}
                         </div>
-                        {entry.tags && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {entry.tags.split(",").map((tag: string, index: number) => (
-                              <span key={index} className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
-                                {tag.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             </div>
@@ -218,85 +219,53 @@ export default function Home() {
 
           {/* Entry Detail View */}
           {mobileView === "detail" && (
-            <div className="flex flex-col h-full">
-              <div className="sticky top-0 z-20 bg-stone-200 border-b border-stone-300">
-                <div className="flex items-center justify-between p-2">
-                  <div className="flex items-center">
-                    <button
-                      onClick={goBackToList}
-                      className="mr-2 text-stone-600 hover:text-stone-800 flex items-center text-xs font-medium"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Back
-                    </button>
-                    <h2 className="text-lg font-bold text-stone-800">Edit Entry</h2>
-                  </div>
+            <div className="flex flex-col h-full bg-background animate-fade-in relative">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/5 bg-sidebar-bg">
+                <button
+                  onClick={goBackToList}
+                  className="p-2 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-full transition-all-custom"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div className="flex flex-col items-center">
+                  <h2 className="text-xs font-bold text-foreground/80 uppercase tracking-widest font-outfit">Entry</h2>
                   {selectedEntry && (
-                    <div className="flex flex-col text-xs text-stone-500">
-                      <span>
-                        {selectedEntry.strict_date} {selectedEntry.created_at && (
-                          <span className="ml-1">{formatTimeCST(selectedEntry.created_at)}</span>
-                        )}
-                      </span>
-                      {selectedEntry.updated_at && selectedEntry.updated_at !== selectedEntry.created_at && (
-                        <span className="text-xs text-stone-400">
-                          {formatUpdatedAtCST(selectedEntry.updated_at)}
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[9px] text-foreground/30 font-bold font-outfit">{selectedEntry.strict_date}</span>
                   )}
                 </div>
-                {selectedEntry && (
-                  <div className="flex justify-end px-2 pb-1 space-x-4">
-                    {hasUnsavedChanges && (
-                      <button
-                        onClick={saveChanges}
-                        className="text-green-600 hover:text-green-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Saving..." : "Save"}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        confirmDeleteEntry(selectedEntry.id, hasUnsavedChanges, true);
-                      }}
-                      className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "..." : "Delete"}
-                    </button>
-                  </div>
-                )}
+                <div className="w-9" /> {/* Spacer */}
               </div>
-              <div
-                className="p-4 overflow-y-auto flex-1"
-                style={{ paddingTop: "0.5rem", paddingBottom: "1rem" }}
-              >
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full text-stone-600">
-                    <p className="text-lg">Loading...</p>
-                  </div>
+              
+              <div className="overflow-y-auto flex-1 flex flex-col p-6">
+                {isLoading && !selectedEntry ? (
+                   <div className="flex-1 flex items-center justify-center opacity-40">
+                     <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                   </div>
                 ) : selectedEntry ? (
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center mb-4">
-                      <input
-                        type="text"
+                  <>
+                    <div className="flex items-start gap-4 mb-6 group">
+                      <textarea
                         value={currentTitle}
                         onChange={(e) => {
                           setCurrentTitle(e.target.value);
                           setHasUnsavedChanges(true);
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
                         }}
-                        placeholder="Title"
-                        className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 flex-1 focus:outline-none focus:border-blue-500"
+                        placeholder="Untitled Thoughts"
+                        rows={1}
+                        className="text-2xl font-bold text-foreground bg-transparent border-none p-0 flex-1 focus:outline-none placeholder:text-foreground/10 font-outfit resize-none overflow-hidden"
                         disabled={isLoading || isTitleGenerating}
                       />
                       <SparkleButton
                         onClick={async () => {
                           if (currentContent.trim() === '') {
-                            setAiError('Please add some content before generating a title');
+                            setAiError('Please add content');
                             return;
                           }
                           const generatedTitle = await generateTitleFromContent(currentContent);
@@ -306,9 +275,7 @@ export default function Home() {
                           }
                         }}
                         isLoading={isTitleGenerating}
-                        title="Generate title from content"
                         size="md"
-                        className="ml-2"
                       />
                     </div>
                     <textarea
@@ -318,72 +285,70 @@ export default function Home() {
                         setHasUnsavedChanges(true);
                       }}
                       placeholder="Start writing..."
-                      className="flex-1 text-lg text-stone-800 bg-transparent resize-none focus:outline-none mb-4"
+                      className="flex-1 text-xl text-foreground/80 bg-transparent resize-none focus:outline-none font-caveat leading-relaxed placeholder:text-foreground/5 min-h-[300px]"
                       disabled={isLoading}
-                      rows={10}
                     />
-                  </div>
+
+                    <div className="mt-8 py-6 border-t border-foreground/5 mb-24">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-[10px] uppercase tracking-widest font-bold text-foreground/30 font-outfit">Tags</label>
+                        <SparkleButton
+                          onClick={async () => {
+                            if (currentContent.trim() === '') {
+                              setAiError('Please add content');
+                              return;
+                            }
+                            const generatedTags = await generateTagsFromContent(currentContent);
+                            if (generatedTags) {
+                              setCurrentTags(generatedTags);
+                              setHasUnsavedChanges(true);
+                            }
+                          }}
+                          isLoading={isTagsGenerating}
+                          size="sm"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={currentTags}
+                        onChange={(e) => {
+                          setCurrentTags(e.target.value);
+                          setHasUnsavedChanges(true);
+                        }}
+                        placeholder="Add tags..."
+                        className="w-full bg-foreground/5 border-none rounded-xl p-3 text-sm text-foreground/70 focus:outline-none font-outfit"
+                        disabled={isLoading || isTagsGenerating}
+                      />
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-stone-600">
-                    <p className="text-lg">No entry selected</p>
-                    <button
-                      onClick={goBackToList}
-                      className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                    >
-                      Go back to entries
-                    </button>
+                  <div className="flex-1 flex flex-col items-center justify-center text-foreground/20">
+                    <p className="font-outfit uppercase tracking-widest text-xs">Entry not found</p>
+                    <button onClick={goBackToList} className="mt-4 text-primary font-bold text-sm">Back to Journal</button>
                   </div>
                 )}
               </div>
-              {selectedEntry && (
-                <div className="mt-6 mb-20 p-3 border border-stone-300 rounded-lg bg-stone-50">
-                  <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="mobile-tags" className="block text-sm font-medium text-stone-600">
-                      Tags (comma separated)
-                    </label>
-                    <SparkleButton
-                      onClick={async () => {
-                        if (currentContent.trim() === '') {
-                          setAiError('Please add some content before generating tags');
-                          return;
-                        }
-                        const generatedTags = await generateTagsFromContent(currentContent);
-                        if (generatedTags) {
-                          setCurrentTags(generatedTags);
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      isLoading={isTagsGenerating}
-                      title="Generate tags from content"
-                      size="sm"
-                    />
-                  </div>
-                  <input
-                    id="mobile-tags"
-                    type="text"
-                    value={currentTags}
-                    onChange={(e) => {
-                      setCurrentTags(e.target.value);
-                      setHasUnsavedChanges(true);
-                    }}
-                    placeholder="e.g. Work, Personal, Ideas"
-                    className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
-                    disabled={isLoading || isTagsGenerating}
-                  />
-                  {aiError && (
-                    <div className="mt-2 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
-                      {aiError}
-                      <button
-                        onClick={() => setAiError(null)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                        aria-label="Dismiss error"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-2 glass rounded-full shadow-2xl border-glass-border animate-fade-in z-20">
+                {hasUnsavedChanges && (
+                  <button
+                    onClick={saveChanges}
+                    className="bg-primary hover:bg-primary-hover text-white flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold font-outfit shadow-lg shadow-primary/20"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "..." : "Save"}
+                  </button>
+                )}
+                <button
+                  onClick={() => confirmDeleteEntry(selectedEntry!.id, hasUnsavedChanges, true)}
+                  className="p-2.5 text-foreground/30 hover:text-red-500 transition-colors"
+                  disabled={isLoading}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
         </div>

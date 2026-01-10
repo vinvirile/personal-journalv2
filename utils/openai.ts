@@ -1,9 +1,14 @@
 import OpenAI from 'openai';
 
-// Initialize the OpenAI client
+// Initialize the OpenAI client for OpenRouter
 const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
   dangerouslyAllowBrowser: true, // Allow client-side usage
+  defaultHeaders: {
+    'HTTP-Referer': 'https://vincatory.journalv2.com', // Optional, replaces with your actual domain
+    'X-Title': 'Personal Journal V2', // Optional, replaces with your actual app name
+  },
 });
 
 /**
@@ -18,7 +23,7 @@ export async function generateTitle(content: string): Promise<string> {
     }
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'deepseek/deepseek-chat',
       messages: [
         {
           role: 'system',
@@ -53,7 +58,7 @@ export async function generateTags(content: string): Promise<string> {
     }
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'deepseek/deepseek-chat',
       messages: [
         {
           role: 'system',

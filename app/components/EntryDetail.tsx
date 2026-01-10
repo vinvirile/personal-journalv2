@@ -41,119 +41,151 @@ const EntryDetail: React.FC<EntryDetailProps> = ({
   } = useAIGeneration();
   if (!entry) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-stone-600">
-<p className="text-lg">Select an entry or click &#39;+&#39; to create a new one.</p>
+      <div className="flex flex-col items-center justify-center h-full opacity-20">
+        <div className="w-24 h-24 bg-foreground/5 rounded-3xl flex items-center justify-center mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <p className="text-sm font-outfit tracking-widest uppercase">Select an entry to begin</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center mb-4">
-        <input
-          type="text"
-          value={currentTitle}
-          onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Title"
-          className="text-2xl font-bold text-stone-800 bg-transparent border-b border-stone-300 pb-2 flex-1 focus:outline-none focus:border-blue-500"
-          disabled={isLoading || isTitleGenerating}
-        />
-        <SparkleButton
-          onClick={async () => {
-            if (currentContent.trim() === '') {
-              setError('Please add some content before generating a title');
-              return;
-            }
-            const generatedTitle = await generateTitleFromContent(currentContent);
-            if (generatedTitle) {
-              onTitleChange(generatedTitle);
-            }
-          }}
-          isLoading={isTitleGenerating}
-          title="Generate title from content"
-          size="md"
-          className="ml-2"
-        />
-      </div>
-      <textarea
-        value={currentContent}
-        onChange={(e) => onContentChange(e.target.value)}
-        placeholder="Start writing..."
-        className="flex-1 text-lg text-stone-800 bg-transparent resize-none focus:outline-none mb-4"
-        disabled={isLoading}
-      />
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <label htmlFor="tags" className="block text-sm font-medium text-stone-600">Tags (comma separated)</label>
+    <div className="flex flex-col h-full animate-fade-in relative">
+      <div className="flex-1 flex flex-col px-8 pt-8 pb-4 overflow-y-auto">
+        <div className="flex items-start gap-4 mb-8 group">
+          <textarea
+            value={currentTitle}
+            onChange={(e) => {
+              onTitleChange(e.target.value);
+              // Auto-resize title
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+            placeholder="A title for your thoughts..."
+            rows={1}
+            className="text-3xl md:text-4xl font-bold text-foreground bg-transparent border-none p-0 flex-1 focus:outline-none placeholder:text-foreground/10 font-outfit resize-none overflow-hidden"
+            disabled={isLoading || isTitleGenerating}
+          />
           <SparkleButton
             onClick={async () => {
               if (currentContent.trim() === '') {
-                setError('Please add some content before generating tags');
+                setError('Please add some content before generating a title');
                 return;
               }
-              const generatedTags = await generateTagsFromContent(currentContent);
-              if (generatedTags) {
-                onTagsChange(generatedTags);
+              const generatedTitle = await generateTitleFromContent(currentContent);
+              if (generatedTitle) {
+                onTitleChange(generatedTitle);
               }
             }}
-            isLoading={isTagsGenerating}
-            title="Generate tags from content"
-            size="sm"
+            isLoading={isTitleGenerating}
+            title="AI Title"
+            size="md"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
           />
         </div>
-        <input
-          id="tags"
-          type="text"
-          value={currentTags}
-          onChange={(e) => onTagsChange(e.target.value)}
-          placeholder="e.g. Work, Personal, Ideas"
-          className="w-full p-2 text-sm text-stone-800 border border-stone-300 rounded focus:outline-none focus:border-blue-500"
-          disabled={isLoading || isTagsGenerating}
+
+        <textarea
+          value={currentContent}
+          onChange={(e) => onContentChange(e.target.value)}
+          placeholder="What's on your mind?"
+          className="flex-1 text-xl text-foreground/80 bg-transparent resize-none focus:outline-none font-caveat leading-relaxed placeholder:text-foreground/5 min-h-[400px]"
+          disabled={isLoading}
         />
+
+        <div className="mt-12 py-8 border-t border-foreground/5 mb-20">
+          <div className="flex items-center justify-between mb-4">
+            <label htmlFor="tags" className="text-xs uppercase tracking-widest font-bold text-foreground/30 font-outfit">Tags</label>
+            <SparkleButton
+              onClick={async () => {
+                if (currentContent.trim() === '') {
+                  setError('Please add some content before generating tags');
+                  return;
+                }
+                const generatedTags = await generateTagsFromContent(currentContent);
+                if (generatedTags) {
+                  onTagsChange(generatedTags);
+                }
+              }}
+              isLoading={isTagsGenerating}
+              title="AI Tags"
+              size="sm"
+            />
+          </div>
+          <input
+            id="tags"
+            type="text"
+            value={currentTags}
+            onChange={(e) => onTagsChange(e.target.value)}
+            placeholder="Personal, Reflection, Ideas..."
+            className="w-full bg-foreground/5 border-none rounded-xl p-4 text-sm text-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary/20 placeholder:text-foreground/20 font-outfit"
+            disabled={isLoading || isTagsGenerating}
+          />
+          {error && (
+            <div className="mt-4 p-3 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-center justify-between animate-shake border border-red-500/20">
+              <span>{error}</span>
+              <button 
+                onClick={() => setError(null)}
+                className="hover:scale-110 transition-transform"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      {error && (
-        <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 text-red-500 hover:text-red-700"
-            aria-label="Dismiss error"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      <div className="flex justify-between items-center p-4 border-t border-stone-300 bg-stone-100">
-        <div className="flex flex-col text-sm text-stone-500">
-          <span>
-            {entry.strict_date} {entry.created_at && (
-              <span className="ml-1">{formatTimeCST(entry.created_at)}</span>
-            )}
+
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-3 glass rounded-full shadow-2xl border-glass-border animate-fade-in">
+        <div className="flex flex-col items-center pr-4 border-r border-foreground/5">
+          <span className="text-[10px] uppercase font-bold text-foreground/30 tracking-wider font-outfit">
+            {entry.strict_date}
           </span>
-          {entry.updated_at && entry.updated_at !== entry.created_at && (
-            <span className="text-xs text-stone-400 mt-1">
-              {formatUpdatedAtCST(entry.updated_at)}
-            </span>
-          )}
+          <span className="text-[10px] font-medium text-foreground/20 font-outfit">
+             {entry.created_at && formatTimeCST(entry.created_at)}
+          </span>
         </div>
-        <div className="flex space-x-2">
-          {hasUnsavedChanges && (
-            <button
-              onClick={onSave}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
-            >
-              {isLoading ? "Saving..." : "Save Changes"}
-            </button>
-          )}
+        
+        {entry.updated_at && entry.updated_at !== entry.created_at && (
+          <span 
+            className="text-[10px] font-medium text-foreground/30 font-outfit"
+            suppressHydrationWarning
+          >
+            {formatUpdatedAtCST(entry.updated_at)}
+          </span>
+        )}
+        
+        {hasUnsavedChanges && (
           <button
-            onClick={onDelete}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onSave}
+            className="bg-primary hover:bg-primary-hover text-white flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold font-outfit shadow-lg shadow-primary/20 transition-all-custom active:scale-95 disabled:opacity-50"
             disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? (
+              <svg className="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+            Save
           </button>
-        </div>
+        )}
+        
+        <button
+          onClick={onDelete}
+          className="p-2 text-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all-custom active:scale-90"
+          title="Delete Entry"
+          disabled={isLoading}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
       </div>
     </div>
   );

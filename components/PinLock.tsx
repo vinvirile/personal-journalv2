@@ -56,78 +56,88 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
     }
   }, [pin, validatePin]);
 
-  // Create number buttons 0-9
-  const numberButtons = [];
-  for (let i = 1; i <= 9; i++) {
-    numberButtons.push(
-      <button
-        key={i}
-        onClick={() => handleNumberClick(i)}
-        className="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold flex items-center justify-center shadow-md transition-colors"
-      >
-        {i}
-      </button>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-stone-100 z-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-80 flex flex-col items-center">
-        <h2 className="text-2xl font-bold text-stone-800 mb-6">Enter PIN</h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 animate-fade-in">
+      <div className="glass p-10 rounded-3xl shadow-2xl w-80 flex flex-col items-center transition-all-custom border-glass-border">
+        <h2 className="text-xl font-medium text-foreground/80 mb-8 font-outfit uppercase tracking-widest">Enter PIN</h2>
 
         {/* PIN display */}
-        <div className={`mb-6 flex gap-3 ${shake ? 'animate-shake' : ''}`}>
+        <div className={`mb-10 flex gap-4 ${shake ? 'animate-shake' : ''}`}>
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`w-5 h-5 rounded-full border-2 ${
+              className={`w-3.5 h-3.5 rounded-full transition-all-custom border ${
                 pin.length > i
-                  ? 'bg-blue-500 border-blue-500'
-                  : 'bg-white border-stone-300'
+                  ? 'bg-primary border-primary scale-110 shadow-[0_0_10px_rgba(37,99,235,0.5)]'
+                  : 'bg-transparent border-foreground/20'
               }`}
             />
           ))}
         </div>
 
         {/* Error message */}
-        {error && (
-          <p className="text-red-500 mb-4 text-sm">{error}</p>
-        )}
+        <div className="h-6 mb-2">
+          {error && (
+            <p className="text-red-500 font-outfit text-xs animate-shake">{error}</p>
+          )}
+        </div>
 
         {/* Number pad */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {numberButtons}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <button
+              key={i}
+              onClick={() => handleNumberClick(i)}
+              className="w-14 h-14 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground text-2xl font-light font-outfit flex items-center justify-center transition-all-custom active:scale-90"
+            >
+              {i}
+            </button>
+          ))}
           <button
             onClick={handleClear}
-            className="w-16 h-16 rounded-full bg-stone-300 hover:bg-stone-400 text-stone-800 text-sm font-bold flex items-center justify-center shadow-md transition-colors"
+            className="w-14 h-14 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/60 text-[10px] uppercase font-bold font-outfit flex items-center justify-center transition-all-custom active:scale-95"
           >
             Clear
           </button>
           <button
             onClick={() => handleNumberClick(0)}
-            className="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold flex items-center justify-center shadow-md transition-colors"
+            className="w-14 h-14 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground text-2xl font-light font-outfit flex items-center justify-center transition-all-custom active:scale-90"
           >
             0
           </button>
           <button
             onClick={handleDelete}
-            className="w-16 h-16 rounded-full bg-stone-300 hover:bg-stone-400 text-stone-800 text-xl font-bold flex items-center justify-center shadow-md transition-colors"
+            className="w-14 h-14 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground text-xl flex items-center justify-center transition-all-custom active:scale-95"
           >
-            ←
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+            </svg>
           </button>
         </div>
 
         {/* Remember Me checkbox */}
-        <div className="flex items-center mt-2 mb-2">
+        <div className="flex items-center group cursor-pointer">
           <input
             type="checkbox"
             id="rememberMe"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 text-blue-500 rounded border-stone-300 focus:ring-blue-500"
+            className="hidden"
           />
-          <label htmlFor="rememberMe" className="ml-2 text-sm text-stone-600">
-            Remember me on this device
+          <div 
+            onClick={() => setRememberMe(!rememberMe)}
+            className={`h-4 w-4 rounded-sm border mr-3 flex items-center justify-center transition-all-custom ${
+              rememberMe ? 'bg-primary border-primary' : 'border-foreground/20 group-hover:border-foreground/40'
+            }`}
+          >
+            {rememberMe && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+          <label htmlFor="rememberMe" className="text-xs text-foreground/50 font-outfit cursor-pointer group-hover:text-foreground/70 transition-colors">
+            Remember this device
           </label>
         </div>
       </div>
