@@ -35,7 +35,7 @@ export async function generateTitle(content: string): Promise<string> {
           content: `Generate a short, meaningful title for this journal entry:\n\n${content.substring(0, 1500)}`
         }
       ],
-      max_tokens: 30,
+      max_tokens: 100,
       temperature: 0.7,
     });
 
@@ -70,7 +70,7 @@ export async function generateTags(content: string): Promise<string> {
           content: `Generate 3-5 comma-separated tags for this journal entry:\n\n${content.substring(0, 1500)}`
         }
       ],
-      max_tokens: 50,
+      max_tokens: 100,
       temperature: 0.7,
     });
 
