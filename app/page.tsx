@@ -6,7 +6,8 @@ import EntryList from "./components/EntryList";
 import EntryDetail from "./components/EntryDetail";
 import SparkleButton from "./components/SparkleButton";
 import ConfirmDialog from "./components/ConfirmDialog";
-import DateRangePickerComponent from "./components/DateRangePicker"; // Import DateRangePickerComponent
+import DateRangePickerComponent from "./components/DateRangePicker";
+import ThemeToggle from "./components/ThemeToggle";
 import { useJournal } from "./hooks/useJournal";
 import { useAIGeneration } from "./hooks/useAIGeneration";
 import { formatTimeCST, formatUpdatedAtCST } from "../utils/dateUtils";
@@ -135,6 +136,7 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-foreground font-outfit">Journal</h2>
                   <div className="flex items-center gap-1">
+                    <ThemeToggle />
                     <button
                       onClick={() => setShowDatePicker(!showDatePicker)}
                       className={`p-1.5 rounded-lg transition-all-custom ${showDatePicker ? 'bg-primary/10 text-primary' : 'text-foreground/40'}`}
@@ -209,6 +211,15 @@ export default function Home() {
                             {entry.strict_date}
                           </span>
                         </div>
+                        {entry.tags && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {entry.tags.split(',').slice(0, 3).map((tag, idx) => (
+                              <span key={idx} className="text-[9px] font-medium bg-foreground/5 text-foreground/50 px-2 py-0.5 rounded-md">
+                                {tag.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -235,7 +246,9 @@ export default function Home() {
                     <span className="text-[9px] text-foreground/30 font-bold font-outfit">{selectedEntry.strict_date}</span>
                   )}
                 </div>
-                <div className="w-9" /> {/* Spacer */}
+                <div className="flex items-center gap-1 pr-2">
+                  <ThemeToggle />
+                </div>
               </div>
               
               <div className="overflow-y-auto flex-1 flex flex-col p-6">
