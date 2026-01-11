@@ -21,15 +21,13 @@
   --font-outfit: var(--font-outfit);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #f5f5f4;
-    --glass-bg: rgba(28, 25, 23, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --card-bg: #1c1917;
-    --sidebar-bg: #110e0e;
-  }
+.dark {
+  --background: #121212;
+  --foreground: #e5e5e5;
+  --glass-bg: rgba(24, 24, 27, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --card-bg: #1e1e1e;
+  --sidebar-bg: #18181b;
 }
 
 html,
@@ -64,10 +62,8 @@ body {
   border-radius: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-  }
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {

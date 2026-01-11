@@ -1,7 +1,8 @@
-import React from "react"; // Removed useState
+import React from "react";
 import { Entry } from "../types/Entry";
 import DateRangePickerComponent from "./DateRangePicker";
 import { formatTimeCST, formatUpdatedAtCST } from "../../utils/dateUtils";
+import ThemeToggle from "./ThemeToggle";
 
 interface EntryListProps {
   // entries: Entry[]; // Removed original entries prop
@@ -53,6 +54,7 @@ const EntryList: React.FC<EntryListProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
+            <ThemeToggle />
             <button
               onClick={onLock}
               className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground/60 hover:bg-foreground/5 transition-all-custom"
