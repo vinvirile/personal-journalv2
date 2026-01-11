@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateTitle, generateTags } from '../../utils/openai';
+// Now using local API routes instead of direct util calls to keep API key secure
 
 export function useAIGeneration() {
   const [isTitleGenerating, setIsTitleGenerating] = useState<boolean>(false);
@@ -20,8 +20,19 @@ export function useAIGeneration() {
     try {
       setIsTitleGenerating(true);
       setError(null);
-      const title = await generateTitle(content);
-      return title;
+      
+      const response = await fetch('/api/ai/generate-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate title');
+      }
+
+      const data = await response.json();
+      return data.title;
     } catch (err) {
       console.error('Error in generateTitleFromContent:', err);
       setError('Failed to generate title. Please try again.');
@@ -45,8 +56,19 @@ export function useAIGeneration() {
     try {
       setIsTagsGenerating(true);
       setError(null);
-      const tags = await generateTags(content);
-      return tags;
+      
+      const response = await fetch('/api/ai/generate-tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate tags');
+      }
+
+      const data = await response.json();
+      return data.tags;
     } catch (err) {
       console.error('Error in generateTagsFromContent:', err);
       setError('Failed to generate tags. Please try again.');

@@ -1,13 +1,14 @@
 import OpenAI from 'openai';
 
 // Initialize the OpenAI client for OpenRouter
+// This utility should now only be called from server-side (API routes)
 const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
   baseURL: 'https://openrouter.ai/api/v1',
-  dangerouslyAllowBrowser: true, // Allow client-side usage
+  dangerouslyAllowBrowser: false, 
   defaultHeaders: {
-    'HTTP-Referer': 'https://vincatory.journalv2.com', // Optional, replaces with your actual domain
-    'X-Title': 'Personal Journal V2', // Optional, replaces with your actual app name
+    'HTTP-Referer': 'https://journal.virile.vin',
+    'X-Title': 'Personal Journal V2',
   },
 });
 
