@@ -56,6 +56,30 @@ export default function PinLock({ correctPin, onUnlock }: PinLockProps) {
     }
   }, [pin, validatePin]);
 
+  // Handle keyboard events
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle numbers 0-9
+      if (/^\d$/.test(e.key)) {
+        handleNumberClick(parseInt(e.key));
+      } 
+      // Handle backspace
+      else if (e.key === 'Backspace') {
+        handleDelete();
+      }
+      // Handle escape to clear
+      else if (e.key === 'Escape') {
+        handleClear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pin]); // Re-register if pin length changes to ensure handleNumberClick has latest state if needed
+  // Actually, handleNumberClick uses functional update, so pin dependency might not be strictly necessary 
+  // but it's safer if we ever change how handleNumberClick works.
+  // Wait, handleNumberClick checks pin.length < 4. If it's not using functional update for that check, it needs pin.
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 animate-fade-in">
       <div className="glass p-10 rounded-3xl shadow-2xl w-80 flex flex-col items-center transition-all-custom border-glass-border">
